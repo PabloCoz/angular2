@@ -1,33 +1,39 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Gif, SearchGifsResponse } from '../interface/gifs.models';
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class GifsService {
 
-    private _historial: string[] = [];
-    private apiKey = '4NUvbyj664e95dpFEVTAv2D4LXNu773h'
+  private _historial: string[] = [];
+  private apiKey = '4NUvbyj664e95dpFEVTAv2D4LXNu773h'
+  private url = 'https://api.giphy.com/v1/gifs';
+  public results: Gif[] = [];
 
-    public results: any[] = [];
+  get historial() {
+    return [...this._historial];
+  }
 
-    get historial() {
-        return [...this._historial];
+  constructor(private http: HttpClient) {
+    this._historial = JSON.parse(localStorage.getItem('historial')!) || [];
+    this.results = JSON.parse(localStorage.getItem('results')!) || [];
+  }
+
+  buscarGifs(query: string) {
+    query = query.trim().toLowerCase();
+    if (!this._historial.includes(query)) {
+      this._historial.unshift(query);
+      this._historial = this._historial.splice(0, 5);
+      localStorage.setItem('historial', JSON.stringify(this._historial));
     }
 
-    constructor(private http: HttpClient) { }
+    const params = new HttpParams().set('api_key', this.apiKey).set('limit', '10').set('q', query);
 
-    buscarGifs(query: string) {
-        query = query.trim().toLowerCase();
-        if (!this._historial.includes(query)) {
-            this._historial.unshift(query);
-            this._historial = this._historial.splice(0, 5);
-        }
-
-        this.http.get(`https://api.giphy.com/v1/gifs/search?api_key=${this.apiKey}&q=${query}&limit=10`
-        ).subscribe((resp: any) => {
-            //console.log(resp.data);
-            this.results = resp.data;
-        });
-    }
+    this.http.get<SearchGifsResponse>(`${this.url}/search`, { params }).subscribe((resp) => {
+      this.results = resp.data;
+      localStorage.setItem('results', JSON.stringify(this.results));
+    });
+  }
 }

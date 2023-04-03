@@ -12,4 +12,7 @@ export class SiderbarComponent {
   get historial(){
     return this.gifsService.historial;
   }
+  buscar(termino: string){
+    this.gifsService.buscarGifs(termino);
+  }
 }
